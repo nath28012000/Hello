@@ -1,0 +1,356 @@
+
+---
+title: "Hello package"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+
+## 1
+
+Run the code below. Replace `<pathname>` with the name of a local directory of your choice, for example `D:/LSTAT2030` 
+
+```{r}
+devtools::create("/Users/sportingboys/Documents/Master /Master 2/Q2/Programmation avancé en R/TP4/Hello")
+```
+
+Next, open `Hello.Rproj`.
+
+Next, in the newly opened R session (`Hello.Rproj`), run  
+
+```{r}
+require(devtools)
+```
+
+
+## 2
+
+Run
+
+```{r}
+use_mit_license()  # add a License
+use_roxygen_md()   # turn on Markdown support (if it is not already the case)
+use_package_doc()  # ask to build a basic documentation for your package
+```
+
+Next, edit the `DESCRIPTION` file to get something like this:
+
+```rmd
+Package: Hello
+Title: Say hello in different languages!
+Version: 0.0.0.9000
+Authors@R:
+  person(given = "Anouar",
+         family = "El Ghouch",
+         role = c("aut", "cre"),
+         email = "anouar.elghouch@uclouvain.be")
+Description: This is a toy package containing a function that
+    says hello when called.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
+```
+
+Next, run
+
+```{r}
+document()  # To update/build the ".Rd" files (R documentation source files which go to the "man" directory)
+```
+
+Then, run
+
+```{r}
+?Hello  # To see the help of your package as a whole 
+```
+
+and
+
+```{r}
+check()  # run R CMD check
+```
+
+See Sections 2.2-2.4 of the course notes for details about the function used above.
+
+## 3
+
+Run this
+
+```{r}
+use_r("hello")
+```
+
+Next, copy/paste the following script into `R/hello.R`.
+
+```{r}
+#' Hello World
+#'
+#' `hello` says _'Hello, world!'_
+#'
+#' @return `'Hello, world!'`
+#'
+#' @export
+
+hello <- function() {
+  cat("Hello, world!")
+}
+```
+
+Next, run
+
+```{r}
+load_all()  # load the development version of the package Hello
+```
+
+Let's verify that the function works and its "environment" is the Hello package.  
+
+```{r}
+hello()
+environment(hello)
+```
+
+## 4
+
+Run this
+
+```{r}
+document()
+?hello
+```
+
+Next, run
+
+```{r}
+check()
+```
+
+
+## 5
+
+Run the code below. This will add a new file named `language.R` to  a new sub-directory named `data-raw`. _The code you use to create/process the dataset `language` should go into `data-raw/language.R`_.
+
+```{r}
+use_data_raw("language")
+```
+
+Next, copy/paste the following script into `language.R`.
+
+```{r}
+language <- data.frame(code = c("en", "fr", "it", "es", "de"), hello = c("Hello", "Bonjour", "Bonjourno", "Hola", "Hallo"))
+
+usethis::use_data(language, overwrite = TRUE)
+```
+
+Next, run the above script as normal, e.g. copy-paste the code into the R console 
+
+This will add a new file named `language.rda`, which contains the `language` dataframe, to a new sub-directory named `data`. When you load your package, this `language` dataframe will be loaded. This will also add the tags `Depends` and `LazyData` to the `DESCRIPTION` file. 
+
+Next, you could clear your Global-Environment and then 
+
+```{r}
+load_all()
+```
+
+to access the `language` dataframe  within your package "environment" (and not from the Global-Environment, which must remain clean).     
+
+## 6
+
+Run the code below. This will create a blank file named `data.R` in the R sub-directory. _The documentation of any data in your package should go their_. 
+
+```{r}
+use_r("data")
+```
+
+Next, write the documentation for the `language` data in the `data.R` file using Roxygen comments (as you did for the functions). Here is the source file of the proposed documentation. Note that the last line must be the name of your dataset in quotes (i.e. "language").
+
+```{r}
+#' @title
+#' The `language` dataset
+#'
+#' @description
+#' `language` data provides the word "hello" in different languages.
+#'
+#' @format
+#' This is a `data.frame` with `r nrow(language)` rows and `r ncol(language)` columns:
+#'
+#' * `code`: language code: "en","fr","it","es","de", for
+#'           English, French, Italian, Spanish, and German.
+#'
+#' * `hello`: word "hello" in the language corresponding to the code.
+#'
+#' @author Anouar El Ghouch  <anouar.elghouch@uclouvain.be>
+#'
+#' @source
+#' <https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes>
+#'
+#' <https://translate.google.com>
+#'
+"language"
+```
+
+Next, run
+
+```{r}
+document()
+?language
+```
+
+
+
+## 7
+
+```{r}
+hello <- function(who, lang = "EN", LangData = Hello::language) {
+  if (!exists("who", mode = "character") | length(who) > 1) {
+    stop("Please enter a valid name; see ?hello")
+  }
+
+  LangData <- data.frame(LangData)
+
+  if (ncol(LangData) > 2) {
+    stop("Please enter a valid language data set; see ?hello")
+  }
+
+  colnames(LangData) <- c("code", "hello")
+
+  if ((mode(LangData$code) != "character") | (mode(LangData$hello) != "character")) {
+    stop("Please enter a valid language data set; see ?hello")
+  }
+
+  llang <- tolower(lang)
+
+  hello <- subset(LangData, LangData$code == llang)[[2]]
+
+  ifelse(
+    length(hello) == 1,
+    paste0(hello, ", ", who, "!", sep = ""),
+    paste0("Sorry, ", who, ", ", "your language ", "('", lang, "') ", "is not available!", sep = "")
+  ) |> cat()
+}
+```
+
+## 8
+
+```{r}
+#' Hello World
+#'
+#' `hello` says _"hello"_ in the user-specified language. The user is asked to give her/his name so that the hello message gets personalized.
+#'
+#' @param
+#' who a `character` vector of length 1 that specifies the name of the person to whom the message is addressed.
+#'
+#' @param
+#' lang a `character` vector of length 1 that specifies the preferred language. Default to "EN" for English. Other possible values include "FR" for French, "IT"  for Italian, "ES" for Spanish, or "DE" for German. Case is ignored.
+#'
+#' @param
+#' LangData an optional data.frame with two columns each of mode `character`. The first column gives the language codes and the second column gives the corresponding "hello" word. Default to `language`.
+#'
+#' see `?language`
+#'
+#' @return
+#' a `character` vector with a personalized _"hello"_ message.
+#'
+#' @examples
+#' hello("James")
+#' hello("Amelia", "Es")
+#'
+#' @export
+#'
+hello <- function(who, lang = "EN", LangData = Hello::language) {
+  if (!exists("who", mode = "character") | length(who) > 1) {
+    stop("Please enter a valid namea; see ?hello")
+  }
+
+  LangData <- data.frame(LangData)
+
+  if (ncol(LangData) > 2) {
+    stop("Please enter a valid LangData; see ?hello")
+  }
+
+  colnames(LangData) <- c("code", "hello")
+
+  if ((mode(LangData$code) != "character") | (mode(LangData$hello) != "character")) {
+    stop("Please enter a valid LangData; see ?hello")
+  }
+
+  llang <- tolower(lang)
+
+  hello <- subset(LangData, LangData$code == llang)[[2]]
+
+  ifelse(
+    length(hello) == 1,
+    stringr::str_c(hello, ", ", who, "!", sep = ""),
+    stringr::str_c("Sorry, ", who, ", ", "your language ", "('", lang, "') ", "is not available!", sep = "")
+  ) |> cat()
+}
+```
+
+Let's check our pack
+
+```{r}
+check()
+```
+
+
+## 9
+
+Run this
+
+```{r}
+use_package("stringr", min_version = TRUE)
+```
+
+Next, in the code of `hello()`, replace
+
+```{r}
+paste0(hello, ", ", who, "!", sep = ""),
+paste0("Sorry, ", who, ", ", "your language ", "('", lang, "') ", "is not available!", sep = "")
+```
+
+by
+
+```{r}
+stringr::str_c(hello, ", ", who, "!", sep = ""),
+stringr::str_c("Sorry, ", who, ", ", "your language ", "('", lang, "') ", "is not available!", sep = "")
+```
+
+Next, run
+
+```{r}
+check()
+```
+
+## 10 
+
+```{r}
+build()
+```
+
+## 11 
+
+Follow the instructions provided in the assignment.     
+See the [Hello github-page](https://github.com/elghouch/Hello) which contains all the final source files. 
+
+
+
+## 12
+
+Run (replace "elghouch" by the name of your github account)
+
+```{r}
+devtools::install_github("nath28012000/Hello")
+```
+
+
+
+Next, run 
+
+```{r}
+?hello
+?language
+hello("Amelia", "Es")
+```
+
